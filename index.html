@@ -1,0 +1,701 @@
+<!-- WWF DHP Daily Entry – GitHub Pages copy of Entry.html. Only setting to change: API_URL (search "https://script.google.com/macros/s/AKfycbznI0SB373F3jRN-2EH5hUMSLLFij4Ko_YnShZU3bjxNA5CeZGyUmx-Xd3QZymFsBKDDQ/exec"). No participant data is stored in this file. -->
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>WWF DHP – Daily Entry</title>
+<style>
+  :root { --ink:#1d2433; --quiet:#5b6475; --line:#d9dde5; --bg:#f5f6f8; --card:#fff; --accent:#1f4e79; --ok:#1e7a46; --warn:#b54708; --err:#b42318; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Arial, "Malgun Gothic", sans-serif; color:var(--ink); background:var(--bg); font-size:15px; }
+  header { position:sticky; top:0; z-index:5; background:var(--accent); color:#fff; padding:10px 16px; display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; }
+  header h1 { font-size:17px; margin:0; flex:1 1 auto; }
+  header input[type=date] { font-size:15px; padding:4px 6px; border-radius:6px; border:0; }
+  header .who { font-size:13px; opacity:.9; }
+  main { max-width:900px; margin:0 auto; padding:12px 16px 110px; }
+  .summary { color:var(--quiet); font-size:13px; margin:4px 0 12px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; margin:0 0 12px; overflow:hidden; }
+  .card.dirty { border-color:var(--warn); }
+  .card.error { border-color:var(--err); }
+  .head { display:flex; align-items:center; gap:10px; padding:12px 14px; cursor:pointer; }
+  .head .name { font-weight:bold; flex:1; }
+  .badge { font-size:12px; padding:2px 8px; border-radius:10px; background:#eef1f5; color:var(--quiet); white-space:nowrap; }
+  .badge.ok { background:#e3f4ea; color:var(--ok); }
+  .badge.warn { background:#fdf0e3; color:var(--warn); }
+  .badge.err { background:#fde8e7; color:var(--err); }
+  .body { padding:0 14px 14px; border-top:1px solid var(--line); display:none; }
+  .card.open .body { display:block; }
+  .row { display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; margin-top:12px; }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .seg button { border:0; background:#fff; padding:8px 14px; font-size:14px; cursor:pointer; }
+  .seg button.on { background:var(--accent); color:#fff; }
+  label.small { font-size:13px; color:var(--quiet); display:flex; align-items:center; gap:6px; }
+  input[type=time], select, textarea, input[type=text] { font:inherit; font-size:14px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:#fff; }
+  textarea { width:100%; min-height:54px; resize:vertical; }
+  .link { background:none; border:0; color:var(--accent); text-decoration:underline; cursor:pointer; font-size:13px; padding:0; }
+  .block { border-top:1px dashed var(--line); margin-top:12px; padding-top:10px; }
+  .block .title { font-size:14px; font-weight:bold; }
+  .block .meta { font-size:12px; color:var(--quiet); margin-bottom:6px; }
+  .block .sel { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px; }
+  .block .sel select { flex:1 1 200px; }
+  .block.locked { opacity:.65; }
+  .block.np textarea, .block.np .prompt { display:none; }
+  .msg { font-size:12px; color:var(--err); margin-top:4px; }
+  .others { margin:18px 0 8px; }
+  footer { position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid var(--line); padding:10px 16px; display:flex; gap:12px; align-items:center; justify-content:flex-end; }
+  footer .status { flex:1; font-size:13px; color:var(--quiet); }
+  footer button { background:var(--accent); color:#fff; border:0; border-radius:8px; padding:12px 22px; font-size:16px; cursor:pointer; }
+  footer button:disabled { opacity:.5; }
+  nav { display:flex; gap:6px; }
+  nav button { border:1px solid rgba(255,255,255,.6); background:transparent; color:#fff; border-radius:16px; padding:5px 12px; font-size:13px; cursor:pointer; }
+  nav button.on { background:#fff; color:var(--accent); }
+  table.sum { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); border-radius:8px; font-size:13px; margin-bottom:12px; }
+  table.sum th, table.sum td { padding:7px 8px; border-bottom:1px solid var(--line); text-align:left; }
+  table.sum th { background:#eef1f5; }
+  .rblock { border-top:1px dashed var(--line); margin-top:10px; padding-top:8px; }
+  .rblock .facts { font-size:12px; color:var(--quiet); margin:2px 0 6px; }
+  .rblock textarea { min-height:90px; }
+  .rblock.signed textarea { background:#f3faf6; }
+  .btn { background:var(--accent); color:#fff; border:0; border-radius:8px; padding:9px 14px; font-size:14px; cursor:pointer; }
+  .btn.alt { background:#fff; color:var(--accent); border:1px solid var(--accent); }
+  /* blue = still to do · white with ✓ = this step is finished */
+  .btn.done, .btn.done:disabled { background:#f3faf6; color:var(--ok); border:1px solid #9ad0b0; opacity:1; font-weight:bold; cursor:default; }
+  .btn.undo { background:#fff; color:var(--quiet); border:1px solid var(--line); }
+  .btn:disabled { opacity:.5; }
+  .toolbar { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 12px; }
+  .results { background:#fff; border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-size:13px; margin-bottom:12px; display:none; }
+  .pinbox { max-width:360px; margin:40px auto; background:#fff; border:1px solid var(--line); border-radius:12px; padding:22px; text-align:center; }
+  .pinbox input { font-size:24px; letter-spacing:6px; text-align:center; width:180px; padding:8px; border:1px solid var(--line); border-radius:8px; margin:12px 0; }
+  .namebar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; background:#fff; border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin-bottom:12px; }
+  .namebar.need { border-color:var(--err); }
+  /* loading: a clear overlay so people know something is happening */
+  #busy { position:fixed; inset:0; z-index:50; background:rgba(20,30,50,.45); display:none; align-items:center; justify-content:center; padding:16px; }
+  #busy.on { display:flex; }
+  #busy .box { background:#fff; border-radius:14px; padding:22px 24px; max-width:380px; width:100%; text-align:center; box-shadow:0 8px 30px rgba(0,0,0,.25); }
+  #busy .msg1 { font-size:18px; font-weight:bold; color:var(--accent); margin-top:12px; }
+  #busy .msg2 { font-size:14px; color:var(--ink); margin-top:6px; min-height:18px; }
+  #busy .bar { height:8px; background:#e6ebf2; border-radius:6px; margin-top:14px; overflow:hidden; display:none; }
+  #busy .bar div { height:100%; width:0; background:var(--accent); transition:width .3s; }
+  .spin { width:42px; height:42px; border:5px solid #dfe6f0; border-top-color:var(--accent); border-radius:50%; margin:0 auto; animation:spin 0.9s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .loading { display:inline-flex; align-items:center; gap:10px; background:#fff7d6; color:#7a5b00; border:1px solid #f0d77a; border-radius:8px; padding:10px 14px; font-size:15px; font-weight:bold; }
+  .loading .spin { width:18px; height:18px; border-width:3px; margin:0; }
+  .ver { font-size:11px; color:var(--quiet); }
+  .rules { font-size:12px; color:var(--quiet); background:#fff; border:1px solid var(--line); border-radius:8px; padding:8px 12px; margin-bottom:12px; }
+</style>
+</head>
+<body>
+<div id="busy"><div class="box"><div class="spin"></div><div class="msg1" id="busy1">불러오는 중…</div><div class="msg2" id="busy2"></div><div class="bar" id="busyBar"><div id="busyFill"></div></div></div></div>
+<header>
+  <h1>WWF DHP · Daily Entry 하루 기록</h1>
+  <input type="date" id="date">
+  <nav id="nav" style="display:none">
+    <button id="navEntry" class="on" type="button">입력 Entry</button>
+    <button id="navReview" type="button">검토·서명 Review</button>
+  </nav>
+  <span class="who" id="who"></span>
+  <span class="ver" style="color:#cfe0f5">v2026-10-03e</span>
+  <button type="button" id="logout" style="display:none;border:1px solid rgba(255,255,255,.6);background:transparent;color:#fff;border-radius:16px;padding:4px 10px;font-size:12px;cursor:pointer">사용자 변경 Switch user</button>
+</header>
+<main>
+ <section id="pinView" style="display:none">
+  <div class="pinbox">
+    <div style="font-weight:bold;font-size:17px">내 PIN 입력 · Enter your PIN</div>
+    <div class="summary">관리자에게 받은 본인 PIN을 입력하세요. 기록에 본인 이름이 자동으로 남습니다.<br>Use your own PIN – your name is recorded automatically.</div>
+    <input id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="12">
+    <div><button class="btn" id="pinBtn" type="button">확인 OK</button></div>
+    <div class="msg" id="pinMsg"></div>
+  </div>
+ </section>
+ <section id="entryView">
+
+  <div class="rules">오늘 직접 본 내용만 사실대로 적어 주세요. 다른 날 문장을 복사하지 마세요. 다른 참가자 이름은 쓰지 마세요.
+    · Write only what you saw today; never copy another day's note.</div>
+  <div class="summary" id="summary">Loading…</div>
+  <div id="list"></div>
+  <div class="others" id="othersWrap" style="display:none">
+    <button class="link" id="othersBtn"></button>
+    <div id="others" style="display:none;margin-top:10px"></div>
+  </div>
+ </section>
+ <section id="reviewView" style="display:none">
+  <div class="summary" id="rsummary"></div>
+  <table class="sum" id="rtable"></table>
+  <div class="toolbar">
+    <button class="btn" id="signAll" type="button">보이는 노트 모두 서명 Sign all</button>
+    <button class="btn" id="genLogs" type="button">DDD 로그 만들기 Generate logs</button>
+    <button class="btn undo" id="unsignAllTop" type="button" style="display:none">전체 서명 취소하고 수정 Unsign all</button>
+  </div>
+  <div class="results" id="results"></div>
+  <div id="rlist"></div>
+  <div class="toolbar" id="unsignWrap" style="display:none;margin-top:16px">
+    <button class="btn undo" id="unsignAll" type="button">전체 서명 취소하고 수정 (Unsign all &amp; edit)</button>
+  </div>
+ </section>
+</main>
+<footer id="footer">
+  <span class="status" id="status"></span>
+  <button id="save">저장 Save</button>
+</footer>
+
+<script>
+/* =====================================================================
+ * SETTING – only needed when this page is hosted OUTSIDE Google (GitHub Pages)
+ * Paste the web app URL (Apps Script ▸ Deploy ▸ Manage deployments ▸ Web app URL, ends with /exec).
+ * When the page is opened from the Apps Script link itself, this is ignored.
+ * ===================================================================== */
+const API_URL = 'https://script.google.com/macros/s/AKfycbznI0SB373F3jRN-2EH5hUMSLLFij4Ko_YnShZU3bjxNA5CeZGyUmx-Xd3QZymFsBKDDQ/exec';
+
+/* When hosted outside Google there is no google.script.run – this small stand-in sends the same calls
+   to the web app with fetch (no Google login involved, so multiple signed-in accounts do not matter). */
+(function () {
+  if (window.google && google.script && google.script.run) return;          // inside Apps Script: use the real one
+  function runner(h) {
+    return new Proxy({}, { get(_, name) {
+      if (name === 'withSuccessHandler') return f => runner(Object.assign({}, h, { ok: f }));
+      if (name === 'withFailureHandler') return f => runner(Object.assign({}, h, { fail: f }));
+      if (typeof name !== 'string') return undefined;
+      return (...args) => {
+        const fail = m => h.fail && h.fail(new Error(m));
+        if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(API_URL)) return fail('API_URL is not set in this page (top of the file).');
+        fetch(API_URL, { method: 'POST', redirect: 'follow', credentials: 'omit',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: name, args }) })
+          .then(r => r.text())
+          .then(t => {
+            let j; try { j = JSON.parse(t); } catch (e) { return fail('서버 응답을 읽을 수 없습니다. Apps Script를 새 버전으로 배포했는지(접근: Anyone) 확인하세요.'); }
+            if (j.ok) { if (h.ok) h.ok(j.result); }
+            else fail(/^UNKNOWN_FUNCTION/.test(j.error) ? 'SERVER_OLD: ' + j.error : j.error);
+          })
+          .catch(() => fail('인터넷 연결을 확인하고 다시 시도하세요 (network error).'));
+      };
+    } });
+  }
+  window.google = { script: { run: runner({}) } };
+})();
+</script>
+<script>
+let DAY = null;                 // data from server
+const state = {};               // code -> entry being edited
+const dirty = new Set();
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const toMin = t => { if (!t) return null; const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+
+/* ---------- loading overlay ---------- */
+function busy(msg1, msg2, pct) {
+  if (msg1 === false) { $('busy').classList.remove('on'); return; }
+  $('busy1').textContent = msg1 || '불러오는 중… Loading';
+  $('busy2').textContent = msg2 || '';
+  $('busyBar').style.display = pct == null ? 'none' : 'block';
+  if (pct != null) $('busyFill').style.width = Math.round(pct) + '%';
+  $('busy').classList.add('on');
+}
+const loadingHtml = t => `<span class="loading"><span class="spin"></span>${esc(t || '불러오는 중… Loading')}</span>`;
+const PAGE_VERSION = '2026-10-03e';
+const OLD_SERVER = '서버 코드(Code.gs)가 페이지보다 예전 버전입니다. Apps Script 편집기에서 Code.gs 내용을 새로 붙여넣고 저장한 뒤, 배포 관리 → 연필 → 새 버전으로 다시 배포하세요.';
+const call = (fn, ...args) => new Promise((res, rej) => {
+  const r = google.script.run.withSuccessHandler(res).withFailureHandler(rej);
+  if (typeof r[fn] !== 'function') return rej(new Error(OLD_SERVER + ' (missing: ' + fn + ')'));
+  r.withFailureHandler(err => rej(/^SERVER_OLD/.test(err && err.message) ? new Error(OLD_SERVER) : err))[fn](...args);
+});
+function checkVersion(v) {
+  let el = $('verWarn');
+  if (v === PAGE_VERSION) { if (el) el.remove(); return; }
+  if (!el) { el = document.createElement('div'); el.id = 'verWarn'; el.className = 'loading'; el.style.cssText += ';display:block;margin:0 0 12px;background:#fde8e7;color:#b42318;border-color:#f5b5b0';
+    document.querySelector('main').prepend(el); }
+  el.textContent = '⚠ ' + OLD_SERVER;
+}
+
+/* ---------- choice labels: number + English + 한글 (the saved value stays English) ---------- */
+const KO = {
+  'Full': '전체 참여', 'Most of the activity': '대부분 참여', 'Partial': '일부 참여', 'Minimal': '조금 참여',
+  'Declined': '참여 거부', 'Not present for this block': '이 시간 없음 (부재)',
+  'Independent': '혼자서 (도움 없음)', 'Gestural prompt': '손짓·몸짓 도움', 'Verbal prompt': '말로 도움',
+  'Verbal + physical prompt': '말 + 신체 도움', 'Full physical assistance (hand-over-hand)': '전적인 신체 도움 (손 잡고)',
+};
+const choiceLabel = (x, i) => `${i + 1}. ${x}${KO[x] ? ' – ' + KO[x] : ''}`;
+
+const store = {
+  get(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+};
+let PIN = '';
+try { const sv = JSON.parse(store.get('dhpPin') || '{}'); if (sv.pin && Date.now() - sv.t < 12 * 3600e3) PIN = sv.pin; } catch (e) {}
+let DEVICE = store.get('dhpDevice');
+if (!DEVICE) { DEVICE = Math.random().toString(36).slice(2, 10); store.set('dhpDevice', DEVICE); }
+
+function showPin(msg) {
+  $('pinView').style.display = ''; $('entryView').style.display = 'none'; $('reviewView').style.display = 'none';
+  $('footer').style.display = 'none'; $('pinMsg').textContent = msg || ''; $('pin').value = ''; $('pin').focus();
+}
+function submitPin() {
+  PIN = $('pin').value.trim(); if (!PIN) return;
+  store.set('dhpPin', JSON.stringify({ pin: PIN, t: Date.now() }));
+  $('pinView').style.display = 'none'; $('entryView').style.display = ''; $('footer').style.display = '';
+  load('');
+}
+
+function logout() {
+  if (dirty.size && !confirm('저장하지 않은 내용이 있습니다. 사용자를 바꿀까요?')) return;
+  dirty.clear(); PIN = ''; store.set('dhpPin', ''); $('nav').style.display = 'none'; $('logout').style.display = 'none'; $('who').textContent = '';
+  MODE = 'entry'; showPin('');
+}
+
+function load(dateStr) {
+  if (dirty.size && !confirm('저장하지 않은 내용이 있습니다. 날짜를 바꿀까요? (Unsaved changes will be lost)')) { $('date').value = DAY.date; return; }
+  $('summary').innerHTML = loadingHtml(); $('list').innerHTML = ''; $('others').innerHTML = '';
+  busy('불러오는 중… Loading', '참가자와 오늘 기록을 가져오고 있습니다');
+  google.script.run.withSuccessHandler(d => { busy(false); checkVersion(d.version); render(d); }).withFailureHandler(err => {
+    busy(false);
+    const m = String(err && err.message || err);
+    if (/PIN_REQUIRED/.test(m)) showPin(PIN ? 'PIN이 맞지 않습니다 (wrong PIN)' : '');
+    else if (/PIN_LOCKED/.test(m)) showPin('잘못된 PIN이 너무 많습니다. 10분 후 다시 시도하세요.');
+    else fail(err);
+  }).getDayData(dateStr || '', PIN);
+}
+
+function render(d) {
+  DAY = d; dirty.clear();
+  $('date').value = d.date;
+  $('who').textContent = d.user.name;
+  $('logout').style.display = d.user.mode === 'pin' ? '' : 'none';
+  $('nav').style.display = ['Signer', 'Admin'].includes(d.user.role) ? '' : 'none';
+  const sch = d.people.filter(p => p.scheduled), oth = d.people.filter(p => !p.scheduled);
+  $('summary').textContent = `${d.label} · ${d.blocks.length} activity blocks · ${sch.length} participants scheduled` +
+    (d.blocks.length ? '' : ' — NO SCHEDULE for this date (check Weekly_Template)');
+  d.people.forEach(p => {
+    state[p.code] = {
+      code: p.code,
+      absent: p.attendance ? p.attendance.absent : null,
+      arrival: p.attendance ? p.attendance.arrival : '',
+      departure: p.attendance ? p.attendance.departure : '',
+      note: p.attendance ? p.attendance.note : '',
+      blocks: {},
+    };
+    d.blocks.forEach(b => {
+      const o = p.blocks[b.id] || {};
+      state[p.code].blocks[b.id] = { participation: o.participation || '', prompt: o.prompt || '', observation: o.observation || '',
+        locked: o.status === 'Signed' };
+    });
+  });
+  $('list').innerHTML = sch.map(cardHtml).join('');
+  $('others').innerHTML = oth.map(cardHtml).join('');
+  $('othersWrap').style.display = oth.length ? '' : 'none';
+  $('othersBtn').textContent = `+ 오늘 예정이 아닌 참가자 ${oth.length}명 보기 (not scheduled today)`;
+  d.people.forEach(p => refreshBadge(p.code));
+  updateStatus();
+}
+
+function cardHtml(p) {
+  const s = state[p.code];
+  const opt = (arr, v, ph) => `<option value="">${ph}</option>` +
+    arr.map((x, i) => `<option value="${esc(x)}" ${x === v ? 'selected' : ''}>${esc(choiceLabel(x, i))}</option>`).join('');
+  const blocks = DAY.blocks.map(b => {
+    const bl = s.blocks[b.id];
+    const np = bl.participation === DAY.lists.notPresent;
+    return `<div class="block ${bl.locked ? 'locked' : ''} ${np ? 'np' : ''}" id="blk-${p.code}-${b.id}">
+      <div class="title">${b.id} · ${esc(b.time)} · ${esc(b.activity)}</div>
+      <div class="meta">${esc(b.location)}${bl.locked ? ' · 서명 완료 (Signed) – 수정은 담당자에게' : ''}</div>
+      <div class="sel">
+        <select data-c="${p.code}" data-b="${b.id}" data-f="participation" ${bl.locked ? 'disabled' : ''}>${opt(DAY.lists.participation, bl.participation, '참여도 Participation (숫자 1–' + DAY.lists.participation.length + ')')}</select>
+        <select class="prompt" data-c="${p.code}" data-b="${b.id}" data-f="prompt" ${bl.locked ? 'disabled' : ''}>${opt(DAY.lists.prompt, bl.prompt, '도움 수준 Prompt level (숫자 1–' + DAY.lists.prompt.length + ')')}</select>
+      </div>
+      <textarea data-c="${p.code}" data-b="${b.id}" data-f="observation" ${bl.locked ? 'disabled' : ''}
+        placeholder="(선택 Optional) 특별히 본 것이 있으면 적어 주세요. 비워 두면 \"특이사항 없음\"으로 기록됩니다. e.g., chose the 3 lb weights, did 10 curls">${esc(bl.observation)}</textarea>
+      <div class="msg" id="msg-${p.code}-${b.id}"></div>
+    </div>`;
+  }).join('');
+  return `<div class="card" id="card-${p.code}">
+    <div class="head" onclick="toggle('${p.code}')">
+      <span class="name">${esc(p.name)}</span><span class="badge" id="badge-${p.code}"></span>
+    </div>
+    <div class="body">
+      <div class="row">
+        <div class="seg">
+          <button type="button" id="pres-${p.code}" class="${s.absent === false ? 'on' : ''}" onclick="setAbsent('${p.code}', false)">출석 Present</button>
+          <button type="button" id="abs-${p.code}" class="${s.absent === true ? 'on' : ''}" onclick="setAbsent('${p.code}', true)">결석 Absent</button>
+        </div>
+      </div>
+      <div id="present-${p.code}" style="${s.absent === false ? '' : 'display:none'}">
+        <div class="row">
+          <label class="small">도착 Arrival <input type="time" data-c="${p.code}" data-f="arrival" value="${esc(s.arrival)}"></label>
+          <label class="small">퇴소 Departure <input type="time" data-c="${p.code}" data-f="departure" value="${esc(s.departure)}"></label>
+          <button type="button" class="link" onclick="fullDay('${p.code}')">정시 입력 (${DAY.blocks.length ? DAY.blocks[0].start + '–' + DAY.blocks[DAY.blocks.length - 1].end : ''})</button>
+        </div>
+        <div class="row" style="display:block"><input type="text" style="width:100%" data-c="${p.code}" data-f="note" value="${esc(s.note)}" placeholder="출석 메모 Attendance note (late arrival, left early…)"></div>
+        <div class="msg" id="msg-${p.code}"></div>
+        ${blocks}
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggle(code) { $('card-' + code).classList.toggle('open'); }
+
+function setAbsent(code, absent) {
+  state[code].absent = absent;
+  $('pres-' + code).classList.toggle('on', !absent);
+  $('abs-' + code).classList.toggle('on', absent);
+  $('present-' + code).style.display = absent ? 'none' : '';
+  markDirty(code);
+}
+
+function fullDay(code) {
+  if (!DAY.blocks.length) return;
+  set(code, null, 'arrival', DAY.blocks[0].start);
+  set(code, null, 'departure', DAY.blocks[DAY.blocks.length - 1].end);
+  document.querySelector(`input[data-c="${code}"][data-f="arrival"]`).value = state[code].arrival;
+  document.querySelector(`input[data-c="${code}"][data-f="departure"]`).value = state[code].departure;
+}
+
+function set(code, bid, field, value) {
+  if (bid) state[code].blocks[bid][field] = value; else state[code][field] = value;
+  if (!bid && (field === 'arrival' || field === 'departure')) autoNotPresent(code);
+  markDirty(code);
+}
+
+/** Blocks completely outside the arrival–departure window are set to "Not present" (only if still empty). */
+function autoNotPresent(code) {
+  const s = state[code], a = toMin(s.arrival), d = toMin(s.departure);
+  if (a == null || d == null) return;
+  DAY.blocks.forEach(b => {
+    const bl = s.blocks[b.id];
+    if (bl.locked || bl.participation) return;
+    if (toMin(b.end) <= a || toMin(b.start) >= d) {
+      bl.participation = DAY.lists.notPresent;
+      const sel = document.querySelector(`select[data-c="${code}"][data-b="${b.id}"][data-f="participation"]`);
+      if (sel) { sel.value = bl.participation; $(`blk-${code}-${b.id}`).classList.add('np'); }
+    }
+  });
+}
+
+function markDirty(code) { dirty.add(code); refreshBadge(code); updateStatus(); }
+
+function problems(code) {
+  const s = state[code], out = { card: '', blocks: {} };
+  if (s.absent === null) return out;
+  if (s.absent) return out;
+  if (!s.arrival || !s.departure) out.card = '도착·퇴소 시간을 입력하세요 (arrival & departure required)';
+  else if (toMin(s.departure) <= toMin(s.arrival)) out.card = '퇴소 시간이 도착보다 빠릅니다 (departure before arrival)';
+  DAY.blocks.forEach(b => {
+    const bl = s.blocks[b.id];
+    if (bl.locked) return;
+    if (!bl.participation) out.blocks[b.id] = '참여도를 고르세요 (choose participation)';
+    else if (bl.participation === DAY.lists.notPresent) return;
+    else if (!bl.prompt && bl.participation !== 'Declined') out.blocks[b.id] = '도움 수준을 고르세요 (choose prompt level)';
+  });
+  return out;
+}
+
+function refreshBadge(code) {
+  const s = state[code], el = $('badge-' + code), p = DAY.people.find(x => x.code === code);
+  const pr = problems(code), n = Object.keys(pr.blocks).length + (pr.card ? 1 : 0);
+  if (dirty.has(code)) { el.className = 'badge warn'; el.textContent = n ? `저장 안 됨 · ${n}개 미완성` : '저장 안 됨 Unsaved'; }
+  else if (s.absent === true) { el.className = 'badge ok'; el.textContent = '결석 Absent'; }
+  else if (s.absent === false && !n) { el.className = 'badge ok'; el.textContent = `저장됨 Saved${p.attendance && p.attendance.by ? ' · ' + p.attendance.by : ''}`; }
+  else if (s.absent === false) { el.className = 'badge warn'; el.textContent = `${n}개 미완성 incomplete`; }
+  else { el.className = 'badge'; el.textContent = '미입력 Not started'; }
+}
+
+function updateStatus() {
+  const sch = DAY.people.filter(p => p.scheduled).map(p => p.code);
+  const done = sch.filter(c => state[c].absent !== null && !dirty.has(c)).length;
+  $('status').textContent = `${done}/${sch.length} saved` + (dirty.size ? ` · ${dirty.size} unsaved` : '');
+}
+
+function save() {
+  if (!dirty.size) { $('status').textContent = '변경 사항 없음 (nothing to save)'; return; }
+  const who = DAY.user.name;
+  let bad = 0;
+  const entries = [];
+  dirty.forEach(code => {
+    const s = state[code], pr = problems(code);
+    document.querySelectorAll(`[id^="msg-${code}"]`).forEach(m => m.textContent = '');
+    $('card-' + code).classList.remove('error');
+    if (s.absent === null) return;
+    if (pr.card || Object.keys(pr.blocks).length) {
+      bad++; $('card-' + code).classList.add('error', 'open');
+      if (pr.card) $('msg-' + code).textContent = pr.card;
+      Object.entries(pr.blocks).forEach(([b, m]) => $(`msg-${code}-${b}`).textContent = m);
+      return;
+    }
+    const blocks = {};
+    Object.entries(s.blocks).forEach(([b, bl]) => { if (!bl.locked) blocks[b] = { participation: bl.participation, prompt: bl.prompt, observation: bl.observation }; });
+    entries.push({ code, absent: s.absent, arrival: s.arrival, departure: s.departure, note: s.note, blocks });
+  });
+  if (!entries.length) { $('status').textContent = bad ? `${bad}명 미완성 – 빨간 칸을 확인하세요` : ''; return; }
+  $('save').disabled = true; $('status').textContent = 'Saving…';
+  busy('저장하는 중… Saving', `${entries.length}명 기록 저장 + 노트 초안 작성`);
+  google.script.run.withSuccessHandler(r => {
+    busy(false);
+    $('save').disabled = false;
+    entries.forEach(e => {
+      dirty.delete(e.code);
+      const p = DAY.people.find(x => x.code === e.code);
+      p.attendance = { absent: e.absent, by: who };
+      refreshBadge(e.code);
+      $('card-' + e.code).classList.remove('open', 'error');
+    });
+    updateStatus();
+    $('status').textContent += ` · ${r.people}명 저장 (${r.savedAt})` + (bad ? ` · ${bad}명 미완성 남음` : '');
+  }).withFailureHandler(err => { busy(false); $('save').disabled = false; fail(err); }).saveDayData({ date: DAY.date, entries, pin: PIN, device: DEVICE });
+}
+
+function fail(err) { $('status').textContent = 'Error: ' + (err && err.message ? err.message : err); $('summary').textContent = $('status').textContent; }
+
+document.addEventListener('input', e => {
+  const t = e.target; if (!t.dataset || !t.dataset.c) return;
+  set(t.dataset.c, t.dataset.b || null, t.dataset.f, t.value);
+  if (t.dataset.f === 'participation') $(`blk-${t.dataset.c}-${t.dataset.b}`).classList.toggle('np', t.value === DAY.lists.notPresent);
+});
+/* Number keys: in a 참여도/도움 수준 box, press 1–9 to pick that line; the cursor then jumps to the next box. */
+document.addEventListener('keydown', e => {
+  const t = e.target;
+  if (t.tagName !== 'SELECT' || !t.dataset.f || !/^[1-9]$/.test(e.key)) return;
+  const n = Number(e.key);
+  if (n >= t.options.length) return;
+  e.preventDefault();
+  t.selectedIndex = n;
+  t.dispatchEvent(new Event('input', { bubbles: true }));
+  const c = t.dataset.c, b = t.dataset.b;
+  const skipPrompt = t.value === DAY.lists.notPresent || t.value === 'Declined';
+  let next = null;
+  if (t.dataset.f === 'participation' && !skipPrompt) next = document.querySelector(`select[data-c="${c}"][data-b="${b}"][data-f="prompt"]`);
+  if (!next) {
+    const ids = DAY.blocks.map(x => x.id), i = ids.indexOf(b);
+    for (let k = i + 1; k < ids.length && !next; k++) {
+      const el = document.querySelector(`select[data-c="${c}"][data-b="${ids[k]}"][data-f="participation"]`);
+      if (el && !el.disabled) next = el;
+    }
+  }
+  if (next) next.focus();
+});
+$('date').addEventListener('change', e => MODE === 'review' ? loadReview(e.target.value) : load(e.target.value));
+$('save').addEventListener('click', save);
+$('pinBtn').addEventListener('click', submitPin);
+$('pin').addEventListener('keydown', e => { if (e.key === 'Enter') submitPin(); });
+$('logout').addEventListener('click', logout);
+$('othersBtn').addEventListener('click', () => { const o = $('others'); o.style.display = o.style.display === 'none' ? '' : 'none'; });
+window.addEventListener('beforeunload', e => { if (dirty.size) { e.preventDefault(); e.returnValue = ''; } });
+/* ---------------- Review & sign ---------------- */
+let MODE = 'entry', REV = null;
+
+function show(mode) {
+  if (mode === 'review' && dirty.size && !confirm('입력 화면에 저장하지 않은 내용이 있습니다. 이동할까요?')) return;
+  MODE = mode;
+  $('navEntry').classList.toggle('on', mode === 'entry');
+  $('navReview').classList.toggle('on', mode === 'review');
+  $('entryView').style.display = mode === 'entry' ? '' : 'none';
+  $('reviewView').style.display = mode === 'review' ? '' : 'none';
+  $('footer').style.display = mode === 'entry' ? '' : 'none';
+  if (mode === 'review') loadReview($('date').value); else { dirty.clear(); load($('date').value); }
+}
+
+function loadReview(dateStr) {
+  $('rsummary').innerHTML = loadingHtml(); $('rlist').innerHTML = ''; $('rtable').innerHTML = ''; $('results').style.display = 'none';
+  busy('불러오는 중… Loading', '노트와 서명 상태를 가져오고 있습니다');
+  google.script.run.withSuccessHandler(r => { busy(false); checkVersion(r.version); renderReview(r); })
+    .withFailureHandler(err => { busy(false); $('rsummary').textContent = 'Error: ' + (err.message || err); })
+    .getReviewData(dateStr || '', PIN);
+}
+
+function renderReview(r) {
+  REV = r;
+  r.people.forEach(p => {
+    p.toSign = p.blocks.filter(b => b.row && b.participation !== r.notPresent && b.status !== 'Signed').length;
+    p.missing = p.absent ? 0 : p.blocks.filter(b => !b.row).length;
+  });
+  $('date').value = r.date;
+  const np = r.notPresent;
+  const rows = r.people.map(p => {
+    const need = p.blocks.filter(b => b.row && b.participation !== np);
+    const signed = need.filter(b => b.status === 'Signed').length;
+    const missing = p.absent ? 0 : p.blocks.filter(b => !b.row).length;
+    let action = '';
+    if (!p.hasAttendance) action = '<span class="badge err">입력 없음</span>';
+    else if (p.absent) action = '<span class="badge">결석</span>';
+    else if (missing) action = `<span class="badge warn">미입력 ${missing}</span>`;
+    else if (signed < need.length) action = `<span class="badge warn">서명 ${need.length - signed}개 남음</span>`;
+    else if (!p.log) action = '<span class="badge warn">로그 만들기</span>';
+    else if (p.log.stale) action = `<a href="${esc(p.log.pdf)}" target="_blank">PDF</a> <span class="badge warn">로그가 최신 아님</span>`;
+    else action = `<a href="${esc(p.log.pdf)}" target="_blank">PDF</a> <span class="badge ok">완료</span>`;
+    return `<tr><td>${esc(p.name)}</td><td>${esc(p.attendance || '–')}</td><td>${p.absent ? '' : signed + '/' + need.length}</td><td>${action}</td></tr>`;
+  }).join('');
+  $('rtable').innerHTML = `<tr><th>참가자</th><th>출석</th><th>서명</th><th>상태</th></tr>${rows}`;
+  $('rsummary').textContent = `${r.label} · 노트를 읽고 필요하면 고친 뒤 서명하세요. 서명하면 그 내용이 DDD 로그에 들어갑니다.`;
+  $('rlist').innerHTML = r.people.filter(p => p.hasAttendance && !p.absent).map(p => {
+    const anyMine = p.blocks.some(b => b.status === 'Signed');
+    const blocks = p.blocks.map(b => {
+      if (!b.row) return `<div class="rblock"><div class="title">${b.id} · ${esc(b.time)} · ${esc(b.activity)}</div><div class="msg">아직 입력되지 않음 (not entered)</div></div>`;
+      if (b.participation === np) return `<div class="rblock"><div class="title">${b.id} · ${esc(b.time)} · ${esc(b.activity)}</div><div class="facts">Not present – 단위 제외</div></div>`;
+      const signed = b.status === 'Signed';
+      return `<div class="rblock ${signed ? 'signed' : ''}">
+        <div class="title">${b.id} · ${esc(b.time)} · ${esc(b.activity)} ${signed ? '<span class="badge ok">서명됨 ' + esc(b.signedBy) + '</span>' : (b.status === 'Needs review' ? '<span class="badge warn">다시 검토</span>' : '')}</div>
+        <div class="facts">${esc(b.participation)} · ${esc(b.prompt || '–')} · 입력 ${esc(b.by)}${b.observation ? ' · 관찰: “' + esc(b.observation) + '”' : ''}</div>
+        <textarea data-row="${b.row}" data-signed="${signed ? 1 : 0}" ${signed ? 'disabled' : ''}>${esc(b.note)}</textarea>
+        ${signed ? `<button class="link" type="button" onclick="unsign(${b.row})">서명 취소하고 수정 (Unsign &amp; edit)</button>`
+          : `<button class="link" type="button" onclick="redraft(${b.row}, this)">새 문장으로 다시 쓰기 (Rewrite)</button>`}
+        ${/\[CHECK/.test(b.note) ? '<div class="msg">[CHECK] 부분을 고치고 표시를 지워야 서명됩니다</div>' : ''}
+      </div>`;
+    }).join('');
+    return `<div class="card open"><div class="head"><span class="name">${esc(p.name)} (${esc(p.ddd)})</span>
+      <span class="badge">${esc(p.attendance)}</span></div>
+      <div class="body" style="display:block">${blocks}
+        <div class="row">${p.toSign
+            ? `<button class="btn" type="button" onclick="signCode('${p.code}')">이 참가자 서명 Sign (${p.toSign})</button>`
+            : `<button class="btn done" type="button" disabled>✓ 서명 완료 Signed</button>`}
+          ${p.log ? (p.log.stale
+            ? `<button class="btn" type="button" onclick="regen('${p.code}')">로그 다시 만들기 Re-make log</button>`
+            : `<button class="btn done" type="button" onclick="regen('${p.code}')">✓ 로그 완료 · 다시 만들기</button>`) : ''}
+          ${anyMine ? `<button class="btn undo" type="button" onclick="unsignMany('${p.code}')">이 참가자 서명 취소 Unsign</button>` : ''}</div>
+      </div></div>`;
+  }).join('') || '<div class="summary">이 날짜에 입력된 기록이 없습니다.</div>';
+  const anySigned = r.people.some(p => p.blocks.some(b => b.status === 'Signed'));
+  // progress colours: blue = to do, white ✓ = done
+  const active = r.people.filter(p => p.hasAttendance && !p.absent);
+  const toSign = active.reduce((n, p) => n + p.toSign, 0);
+  const needLog = active.filter(p => !p.toSign && !p.missing && (!p.log || p.log.stale)).length;
+  const allLogs = active.length && active.every(p => p.log && !p.log.stale);
+  setBtn('signAll', toSign ? `서명하기 Sign all (${toSign})` : '✓ 모두 서명됨 All signed', !toSign, true);
+  setBtn('genLogs', allLogs ? '✓ DDD 로그 완료 Logs done' : `DDD 로그 만들기 Generate logs${needLog ? ' (' + needLog + ')' : ''}`, allLogs, false);
+  $('unsignWrap').style.display = anySigned ? '' : 'none';
+  $('unsignAllTop').style.display = anySigned ? '' : 'none';
+}
+
+function setBtn(id, text, done, disableWhenDone) {
+  const b = $(id); b.textContent = text;
+  b.className = 'btn' + (done ? ' done' : '');
+  b.disabled = !!(done && disableWhenDone);
+}
+
+function collect(code) {
+  const sel = code ? REV.people.find(p => p.code === code).blocks.map(b => b.row).filter(Boolean) : null;
+  return [...document.querySelectorAll('#rlist textarea[data-signed="0"]')]
+    .filter(t => !sel || sel.includes(Number(t.dataset.row)))
+    .map(t => ({ row: Number(t.dataset.row), note: t.value }));
+}
+
+function doSign(items) {
+  if (!items.length) { alert('서명할 노트가 없습니다.'); return; }
+  if (!confirm(`${items.length}개 노트에 서명합니다. 실제로 제공된 서비스 내용이 맞습니까?\nYou attest these notes describe services actually delivered.`)) return;
+  busy('서명하는 중… Signing', `${items.length}개 노트`);
+  google.script.run.withSuccessHandler(r => {
+    busy(false);
+    const notes = {}; items.forEach(it => { notes[it.row] = it.note.trim(); });
+    setStatusLocal(r.rows || [], 'Signed', r.signedBy, notes);
+    alert(`${r.signed}개 서명 완료` + (r.skipped.length ? `\n건너뜀(내용 없음 또는 [CHECK]): ${r.skipped.join(', ')}` : '') +
+      '\n\n다음 단계: 위의 "DDD 로그 만들기"를 눌러 PDF를 만드세요.');
+  }).withFailureHandler(err => { busy(false); alert('Error: ' + (err.message || err)); })
+    .signNotes({ date: REV.date, items, pin: PIN });
+}
+function signCode(code) { doSign(collect(code)); }
+
+function redraft(row, btn) {
+  const ta = document.querySelector(`#rlist textarea[data-row="${row}"]`);
+  btn.disabled = true; const old = btn.textContent; btn.textContent = '다시 쓰는 중…';
+  ta.style.background = '#fff7d6';
+  google.script.run.withSuccessHandler(r => { ta.value = r.note; ta.style.background = ''; btn.disabled = false; btn.textContent = old; })
+    .withFailureHandler(err => { ta.style.background = ''; btn.disabled = false; btn.textContent = old; alert('Error: ' + (err.message || err)); })
+    .redraftNote({ row, pin: PIN, current: ta.value });
+}
+
+/** Updates the review screen right away (no full reload). */
+function setStatusLocal(rows, status, signedBy, notes) {
+  const set = new Set(rows.map(Number));
+  // keep any text typed into other notes that has not been signed yet
+  const typed = {}; document.querySelectorAll('#rlist textarea[data-signed="0"]').forEach(t => { typed[t.dataset.row] = t.value; });
+  REV.people.forEach(p => p.blocks.forEach(b => { if (typed[b.row] != null && b.status !== 'Signed') b.note = typed[b.row]; }));
+  REV.people.forEach(p => p.blocks.forEach(b => {
+    if (!set.has(Number(b.row))) return;
+    b.status = status; b.signedBy = status === 'Signed' ? signedBy : '';
+    if (notes && notes[b.row] != null) b.note = notes[b.row];
+    if (p.log) p.log.stale = true;
+  }));
+  const y = window.scrollY; renderReview(REV); window.scrollTo(0, y);
+}
+
+function unsign(row) {
+  if (!confirm('이 블록의 서명을 취소하고 수정할까요? 수정 후 다시 서명해야 합니다.')) return;
+  setStatusLocal([row], 'Needs review');                       // instant on screen
+  google.script.run.withSuccessHandler(r => { if (!r || !r.ok) loadReview(REV.date); })
+    .withFailureHandler(err => { alert('서명 취소 실패 – 다시 불러옵니다.\n' + (err.message || err)); loadReview(REV.date); })
+    .unsignNote({ row, pin: PIN });
+}
+
+/** code = one participant, or empty = everyone on this date */
+function unsignMany(code) {
+  const who = code ? REV.people.find(p => p.code === code).name + '의' : `${REV.label} 전체`;
+  if (!confirm(`${who} 서명을 모두 취소합니다.\n노트를 고친 뒤 다시 서명하고, 로그가 이미 있으면 "로그 다시 만들기"를 눌러야 합니다. 계속할까요?`)) return;
+  const rows = [];
+  REV.people.filter(p => !code || p.code === code).forEach(p => p.blocks.forEach(b => { if (b.status === 'Signed') rows.push(b.row); }));
+  setStatusLocal(rows, 'Needs review');                        // instant on screen; the sheet is updated in the background
+  google.script.run.withSuccessHandler(r => {
+    if (r.unsigned !== rows.length) loadReview(REV.date);      // someone else changed something → show the real state
+  }).withFailureHandler(err => { alert('서명 취소 실패 – 다시 불러옵니다.\n' + (err.message || err)); loadReview(REV.date); })
+    .unsignAll({ date: REV.date, pin: PIN, code: code || '' });
+}
+
+function showLogResults(title, links, problems, voided) {
+  $('results').style.display = '';
+  $('results').innerHTML = (links.length ? `<b>${title}</b><br>` + links.map(l => `${esc(l.name)} – ${l.units} units · <a href="${esc(l.pdf)}" target="_blank">PDF 열기</a>`).join('<br>') : '새로 만든 로그 없음') +
+    (problems.length ? '<br><br><b>만들지 못한 이유</b><br>' + problems.map(esc).join('<br>') : '') +
+    (voided ? `<br><br>이전 로그 ${voided}개는 그 사람 폴더의 _VOID 폴더로 옮겼습니다.` : '');
+  $('results').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/** DDD 로그 만들기: find who is ready, then make several PDFs at the same time with a progress bar. */
+async function genLogs() {
+  busy('로그 준비 중…', '서명이 끝난 참가자를 확인하고 있습니다');
+  try {
+    const plan = await call('getLogPlan', REV.date, PIN);
+    const todo = plan.ready, links = [], problems = plan.problems.slice();
+    if (!todo.length) { busy(false); showLogResults('만든 로그', [], problems, 0); return; }
+    let done = 0, next = 0;
+    const tick = () => busy('PDF 만드는 중… 창을 닫지 마세요', `${done} / ${todo.length}명 완료`, done / todo.length * 100);
+    tick();
+    const worker = async () => {
+      while (next < todo.length) {
+        const it = todo[next++];
+        try {
+          const r = await call('generateOneLog', REV.date, it.code, PIN, false);
+          links.push(...r.links); problems.push(...r.problems);
+        } catch (err) { problems.push(`${it.name}: ${err.message || err}`); }
+        done++; tick();
+      }
+    };
+    await Promise.all([worker(), worker(), worker()]);      // 3 at a time
+    busy(false);
+    showLogResults(`DDD 로그 ${links.length}개 완료`, links, problems, 0);
+    const rr = await call('getReviewData', REV.date, PIN);
+    renderReview(rr); $('results').style.display = '';
+  } catch (err) { busy(false); alert('Error: ' + (err.message || err)); }
+}
+
+async function regen(code) {
+  const p = REV.people.find(x => x.code === code);
+  if (!confirm(`${p.name}의 로그를 다시 만듭니다.\n이전 PDF는 지우지 않고 VOID_를 붙여 그 사람 폴더의 _VOID 폴더로 옮깁니다. 계속할까요?`)) return;
+  busy('로그 다시 만드는 중…', p.name);
+  try {
+    const r = await call('generateOneLog', REV.date, code, PIN, true);
+    busy(false);
+    showLogResults('새 로그', r.links, r.problems, r.voided);
+    const rr = await call('getReviewData', REV.date, PIN);
+    renderReview(rr); $('results').style.display = '';
+  } catch (err) { busy(false); alert('Error: ' + (err.message || err)); }
+}
+
+$('navEntry').addEventListener('click', () => show('entry'));
+$('navReview').addEventListener('click', () => show('review'));
+$('signAll').addEventListener('click', () => doSign(collect(null)));
+$('unsignAll').addEventListener('click', () => unsignMany(''));
+$('unsignAllTop').addEventListener('click', () => unsignMany(''));
+$('genLogs').addEventListener('click', genLogs);
+
+load('');
+</script>
+</body>
+</html>
