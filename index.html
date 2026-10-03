@@ -1,4 +1,4 @@
-<!-- WWF DHP Daily Entry – GitHub Pages copy of Entry.html. Only setting to change: API_URL (search "https://script.google.com/macros/s/AKfycbznI0SB373F3jRN-2EH5hUMSLLFij4Ko_YnShZU3bjxNA5CeZGyUmx-Xd3QZymFsBKDDQ/exec"). No participant data is stored in this file. -->
+<!-- WWF DHP Daily Entry – GitHub Pages copy of Entry.html. Only setting to change: API_URL (search "https://script.google.com/macros/s/AKfycbxEJJoiQBeohaulvyyOEAnki-ZLTCMccVXE6omKMnFKxzoGW6slZp_ojFu4a05s3UiOsw/exec"). No participant data is stored in this file. -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -42,7 +42,18 @@
   .block .sel { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px; }
   .block .sel select { flex:1 1 200px; }
   .block.locked { opacity:.65; }
-  .block.np textarea, .block.np .prompt { display:none; }
+  .block.np textarea, .block.np .prompt, .block.np .goals { display:none; }
+  /* goal check */
+  .goals { margin:4px 0 8px; }
+  .goal { background:#f4f8fc; border:1px solid #d6e2f0; border-radius:8px; padding:8px 10px; margin-bottom:6px; }
+  .goal .gname { font-size:13px; font-weight:bold; }
+  .goal .gtarget { font-size:12px; color:var(--quiet); margin:2px 0 6px; }
+  .goal .seg button { padding:6px 10px; font-size:13px; }
+  .goal .seg button.on.r0 { background:var(--ok); }
+  .goal .seg button.on.r1 { background:#b7791f; }
+  .goal .seg button.on.r2 { background:var(--err); }
+  .goal .seg button.on.r3 { background:#5b6475; }
+  .badge.weak { background:#fff4d6; color:#7a5b00; }
   .msg { font-size:12px; color:var(--err); margin-top:4px; }
   .others { margin:18px 0 8px; }
   footer { position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid var(--line); padding:10px 16px; display:flex; gap:12px; align-items:center; justify-content:flex-end; }
@@ -97,7 +108,7 @@
     <button id="navReview" type="button">검토·서명 Review</button>
   </nav>
   <span class="who" id="who"></span>
-  <span class="ver" style="color:#cfe0f5">v2026-10-03e</span>
+  <span class="ver" style="color:#cfe0f5">v2026-10-03f</span>
   <button type="button" id="logout" style="display:none;border:1px solid rgba(255,255,255,.6);background:transparent;color:#fff;border-radius:16px;padding:4px 10px;font-size:12px;cursor:pointer">사용자 변경 Switch user</button>
 </header>
 <main>
@@ -147,7 +158,7 @@
  * Paste the web app URL (Apps Script ▸ Deploy ▸ Manage deployments ▸ Web app URL, ends with /exec).
  * When the page is opened from the Apps Script link itself, this is ignored.
  * ===================================================================== */
-const API_URL = 'https://script.google.com/macros/s/AKfycbznI0SB373F3jRN-2EH5hUMSLLFij4Ko_YnShZU3bjxNA5CeZGyUmx-Xd3QZymFsBKDDQ/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxEJJoiQBeohaulvyyOEAnki-ZLTCMccVXE6omKMnFKxzoGW6slZp_ojFu4a05s3UiOsw/exec';
 
 /* When hosted outside Google there is no google.script.run – this small stand-in sends the same calls
    to the web app with fetch (no Google login involved, so multiple signed-in accounts do not matter). */
@@ -195,7 +206,7 @@ function busy(msg1, msg2, pct) {
   $('busy').classList.add('on');
 }
 const loadingHtml = t => `<span class="loading"><span class="spin"></span>${esc(t || '불러오는 중… Loading')}</span>`;
-const PAGE_VERSION = '2026-10-03e';
+const PAGE_VERSION = '2026-10-03f';
 const OLD_SERVER = '서버 코드(Code.gs)가 페이지보다 예전 버전입니다. Apps Script 편집기에서 Code.gs 내용을 새로 붙여넣고 저장한 뒤, 배포 관리 → 연필 → 새 버전으로 다시 배포하세요.';
 const call = (fn, ...args) => new Promise((res, rej) => {
   const r = google.script.run.withSuccessHandler(res).withFailureHandler(rej);
@@ -217,6 +228,7 @@ const KO = {
   'Independent': '혼자서 (도움 없음)', 'Gestural prompt': '손짓·몸짓 도움', 'Verbal prompt': '말로 도움',
   'Verbal + physical prompt': '말 + 신체 도움', 'Full physical assistance (hand-over-hand)': '전적인 신체 도움 (손 잡고)',
 };
+const RATING_KO = { 'Met': '달성', 'Partly met': '일부', 'Not met': '미달성', 'No opportunity': '기회 없음' };
 const choiceLabel = (x, i) => `${i + 1}. ${x}${KO[x] ? ' – ' + KO[x] : ''}`;
 
 const store = {
@@ -279,7 +291,7 @@ function render(d) {
     d.blocks.forEach(b => {
       const o = p.blocks[b.id] || {};
       state[p.code].blocks[b.id] = { participation: o.participation || '', prompt: o.prompt || '', observation: o.observation || '',
-        locked: o.status === 'Signed' };
+        goals: Object.assign({}, o.goals || {}), locked: o.status === 'Signed' };
     });
   });
   $('list').innerHTML = sch.map(cardHtml).join('');
@@ -304,6 +316,7 @@ function cardHtml(p) {
         <select data-c="${p.code}" data-b="${b.id}" data-f="participation" ${bl.locked ? 'disabled' : ''}>${opt(DAY.lists.participation, bl.participation, '참여도 Participation (숫자 1–' + DAY.lists.participation.length + ')')}</select>
         <select class="prompt" data-c="${p.code}" data-b="${b.id}" data-f="prompt" ${bl.locked ? 'disabled' : ''}>${opt(DAY.lists.prompt, bl.prompt, '도움 수준 Prompt level (숫자 1–' + DAY.lists.prompt.length + ')')}</select>
       </div>
+      ${goalsHtml(p, b, bl)}
       <textarea data-c="${p.code}" data-b="${b.id}" data-f="observation" ${bl.locked ? 'disabled' : ''}
         placeholder="(선택 Optional) 특별히 본 것이 있으면 적어 주세요. 비워 두면 \"특이사항 없음\"으로 기록됩니다. e.g., chose the 3 lb weights, did 10 curls">${esc(bl.observation)}</textarea>
       <div class="msg" id="msg-${p.code}-${b.id}"></div>
@@ -332,6 +345,27 @@ function cardHtml(p) {
       </div>
     </div>
   </div>`;
+}
+
+/** The participant's goals for this activity (from the Goals tab) with Met / Partly / Not met / No opportunity buttons. */
+function goalsHtml(p, b, bl) {
+  const list = (p.goals || {})[b.id];
+  if (!list || !list.length) return '';
+  const R = DAY.lists.ratings || ['Met', 'Partly met', 'Not met', 'No opportunity'];
+  return `<div class="goals">` + list.map(g => `<div class="goal">
+      <div class="gname">목표 Goal ${esc(g.num)} · ${esc(g.label)}</div>
+      ${g.target ? `<div class="gtarget">달성 기준: ${esc(g.target)}</div>` : ''}
+      <div class="seg">${R.map((r, i) => `<button type="button" class="r${i} ${bl.goals[g.num] === r ? 'on' : ''}" ${bl.locked ? 'disabled' : ''}
+        data-goal="${esc(g.num)}" onclick="setGoal('${p.code}','${b.id}',this.dataset.goal,'${r}',this)">${RATING_KO[r] || r}</button>`).join('')}</div>
+    </div>`).join('') + `</div>`;
+}
+
+function setGoal(code, bid, num, val, btn) {
+  const bl = state[code].blocks[bid];
+  if (bl.locked) return;
+  bl.goals[num] = val;
+  btn.parentNode.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === btn));
+  markDirty(code);
 }
 
 function toggle(code) { $('card-' + code).classList.toggle('open'); }
@@ -387,6 +421,10 @@ function problems(code) {
     if (!bl.participation) out.blocks[b.id] = '참여도를 고르세요 (choose participation)';
     else if (bl.participation === DAY.lists.notPresent) return;
     else if (!bl.prompt && bl.participation !== 'Declined') out.blocks[b.id] = '도움 수준을 고르세요 (choose prompt level)';
+    else if (bl.participation !== 'Declined') {
+      const p = DAY.people.find(x => x.code === code), gl = ((p && p.goals) || {})[b.id] || [];
+      if (gl.some(g => !bl.goals[g.num])) out.blocks[b.id] = '목표 달성 여부를 고르세요 (rate each goal – or 기회 없음)';
+    }
   });
   return out;
 }
@@ -424,7 +462,7 @@ function save() {
       return;
     }
     const blocks = {};
-    Object.entries(s.blocks).forEach(([b, bl]) => { if (!bl.locked) blocks[b] = { participation: bl.participation, prompt: bl.prompt, observation: bl.observation }; });
+    Object.entries(s.blocks).forEach(([b, bl]) => { if (!bl.locked) blocks[b] = { participation: bl.participation, prompt: bl.prompt, observation: bl.observation, goals: bl.goals }; });
     entries.push({ code, absent: s.absent, arrival: s.arrival, departure: s.departure, note: s.note, blocks });
   });
   if (!entries.length) { $('status').textContent = bad ? `${bad}명 미완성 – 빨간 칸을 확인하세요` : ''; return; }
@@ -526,7 +564,9 @@ function renderReview(r) {
     return `<tr><td>${esc(p.name)}</td><td>${esc(p.attendance || '–')}</td><td>${p.absent ? '' : signed + '/' + need.length}</td><td>${action}</td></tr>`;
   }).join('');
   $('rtable').innerHTML = `<tr><th>참가자</th><th>출석</th><th>서명</th><th>상태</th></tr>${rows}`;
-  $('rsummary').textContent = `${r.label} · 노트를 읽고 필요하면 고친 뒤 서명하세요. 서명하면 그 내용이 DDD 로그에 들어갑니다.`;
+  const weak = r.people.reduce((n, p) => n + p.blocks.filter(b => b.status !== 'Signed' && isWeak(b, r.notPresent)).length, 0);
+  $('rsummary').textContent = `${r.label} · 노트를 읽고 필요하면 고친 뒤 서명하세요. 서명하면 그 내용이 DDD 로그에 들어갑니다.` +
+    (weak ? ` · 근거 약한 노트 ${weak}개 (관찰·목표 결과 없음): 아는 사실이 있으면 한 줄 보태 주세요.` : '');
   $('rlist').innerHTML = r.people.filter(p => p.hasAttendance && !p.absent).map(p => {
     const anyMine = p.blocks.some(b => b.status === 'Signed');
     const blocks = p.blocks.map(b => {
@@ -535,7 +575,8 @@ function renderReview(r) {
       const signed = b.status === 'Signed';
       return `<div class="rblock ${signed ? 'signed' : ''}">
         <div class="title">${b.id} · ${esc(b.time)} · ${esc(b.activity)} ${signed ? '<span class="badge ok">서명됨 ' + esc(b.signedBy) + '</span>' : (b.status === 'Needs review' ? '<span class="badge warn">다시 검토</span>' : '')}</div>
-        <div class="facts">${esc(b.participation)} · ${esc(b.prompt || '–')} · 입력 ${esc(b.by)}${b.observation ? ' · 관찰: “' + esc(b.observation) + '”' : ''}</div>
+        <div class="facts">${esc(b.participation)} · ${esc(b.prompt || '–')} · 입력 ${esc(b.by)}${b.goals ? ' · 목표: ' + esc(goalsKo(b.goals)) : ''}${b.observation ? ' · 관찰: “' + esc(b.observation) + '”' : ''}
+          ${isWeak(b, r.notPresent) && !signed ? ' <span class="badge weak">근거 약함 – 한 줄 보태 주세요</span>' : ''}</div>
         <textarea data-row="${b.row}" data-signed="${signed ? 1 : 0}" ${signed ? 'disabled' : ''}>${esc(b.note)}</textarea>
         ${signed ? `<button class="link" type="button" onclick="unsign(${b.row})">서명 취소하고 수정 (Unsign &amp; edit)</button>`
           : `<button class="link" type="button" onclick="redraft(${b.row}, this)">새 문장으로 다시 쓰기 (Rewrite)</button>`}
@@ -564,6 +605,14 @@ function renderReview(r) {
   setBtn('genLogs', allLogs ? '✓ DDD 로그 완료 Logs done' : `DDD 로그 만들기 Generate logs${needLog ? ' (' + needLog + ')' : ''}`, allLogs, false);
   $('unsignWrap').style.display = anySigned ? '' : 'none';
   $('unsignAllTop').style.display = anySigned ? '' : 'none';
+}
+
+const goalsKo = s => String(s).split(';').map(x => { const m = x.split('='); return m.length === 2 ? `${m[0].trim()} ${RATING_KO[m[1].trim()] || m[1].trim()}` : ''; }).filter(Boolean).join(', ');
+/** A note with no observation and no goal result says little about this day (audit risk: cloned notes). */
+function isWeak(b, np) {
+  if (!b.row || b.participation === np || b.participation === 'Declined') return false;
+  const rated = String(b.goals || '').split(';').some(x => /=(Met|Partly met|Not met)\s*$/.test(x.trim()));
+  return !String(b.observation || '').trim() && !rated;
 }
 
 function setBtn(id, text, done, disableWhenDone) {
