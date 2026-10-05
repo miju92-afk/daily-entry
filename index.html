@@ -1,4 +1,4 @@
-<!-- WWF DHP Daily Entry – GitHub Pages copy of Entry.html. Only setting to change: API_URL (search "https://script.google.com/macros/s/AKfycbzmVZmOPOa4THEK5rbcc9vCZHWL-zXcRUukry5ycg3noNJ9-KgfW87OOCt3xu_p9i0jtg/exec"). No participant data is stored in this file. -->
+<!-- WWF DHP Daily Entry – GitHub Pages copy of Entry.html. Only setting to change: API_URL (search "https://script.google.com/macros/s/AKfycbyoMf9FtEnceB8_leuMU56STP4Y-NvOCJUDSsl4eBowOw2svsfDOhvPalgW-4yeDWc3Vg/exec"). No participant data is stored in this file. -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -167,7 +167,7 @@
  * Paste the web app URL (Apps Script ▸ Deploy ▸ Manage deployments ▸ Web app URL, ends with /exec).
  * When the page is opened from the Apps Script link itself, this is ignored.
  * ===================================================================== */
-const API_URL = 'https://script.google.com/macros/s/AKfycbzmVZmOPOa4THEK5rbcc9vCZHWL-zXcRUukry5ycg3noNJ9-KgfW87OOCt3xu_p9i0jtg/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyoMf9FtEnceB8_leuMU56STP4Y-NvOCJUDSsl4eBowOw2svsfDOhvPalgW-4yeDWc3Vg/exec';
 
 /* When hosted outside Google there is no google.script.run – this small stand-in sends the same calls
    to the web app with fetch (no Google login involved, so multiple signed-in accounts do not matter). */
@@ -364,9 +364,9 @@ function cardHtml(p) {
 function strategiesHtml(p) {
   if (DAY.program !== 'Respite' || !DAY.respite) return '';
   const s = state[p.code];
-  const locked = DAY.blocks.length && DAY.blocks.every(b => s.blocks[b.id].locked);
+  // stays editable after signing: it is part of the log header, and changing it marks the log "로그 다시 만들기"
   return `<div class="strat"><div class="gname">오늘 도운 것 · Service Strategies (해당되는 것 모두 · check all that apply)</div>` +
-    DAY.respite.strategies.map((en, i) => `<label><input type="checkbox" ${s.strategies.includes(i + 1) ? 'checked' : ''} ${locked ? 'disabled' : ''}
+    DAY.respite.strategies.map((en, i) => `<label><input type="checkbox" ${s.strategies.includes(i + 1) ? 'checked' : ''}
       onchange="setStrat('${p.code}', ${i + 1}, this.checked)"><span><b>${i + 1}. ${esc(DAY.respite.ko[i])}</b>
       <span class="en">${esc(en)}</span></span></label>`).join('') + `</div>`;
 }
@@ -453,7 +453,7 @@ function problems(code) {
   if (s.absent) return out;
   if (!s.arrival || !s.departure) out.card = '도착·퇴소 시간을 입력하세요 (arrival & departure required)';
   else if (toMin(s.departure) <= toMin(s.arrival)) out.card = '퇴소 시간이 도착보다 빠릅니다 (departure before arrival)';
-  else if (DAY.program === 'Respite' && !s.strategies.length && !DAY.blocks.every(b => s.blocks[b.id].locked)) out.card = '오늘 도운 것(Service Strategies)을 하나 이상 체크하세요 (check at least one box)';
+  else if (DAY.program === 'Respite' && !s.strategies.length) out.card = '오늘 도운 것(Service Strategies)을 하나 이상 체크하세요 (check at least one box)';
   DAY.blocks.forEach(b => {
     const bl = s.blocks[b.id];
     if (bl.locked) return;
