@@ -1,4 +1,4 @@
-<!-- WWF DHP Daily Entry – GitHub Pages copy of Entry.html. Only setting to change: API_URL (search "https://script.google.com/macros/s/AKfycbxTsVbOEzt3rQsWVO0pfPHxjzhOUr2eva3jef4hnEQvevW3e5Ih4zUw0ZsEadlFEPnaBg/exec"). No participant data is stored in this file. -->
+<!-- WWF DHP Daily Entry – GitHub Pages copy of Entry.html. Only setting to change: API_URL (search "PASTE_WEB_APP_EXEC_URL_HERE"). No participant data is stored in this file. -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -6,7 +6,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>WWF DHP – Daily Entry</title>
+<title>WWF DHP Daily Entry</title>
 <style>
   :root { --ink:#1d2433; --quiet:#5b6475; --line:#d9dde5; --bg:#f5f6f8; --card:#fff; --accent:#1f4e79; --ok:#1e7a46; --warn:#b54708; --err:#b42318; }
   * { box-sizing: border-box; }
@@ -49,6 +49,8 @@
   .goal { background:#f4f8fc; border:1px solid #d6e2f0; border-radius:8px; padding:8px 10px; margin-bottom:6px; }
   .goal .gname { font-size:13px; font-weight:bold; }
   .goal .gtarget { font-size:12px; color:var(--quiet); margin:2px 0 6px; }
+  .goal .gweek { display:inline-block; font-size:12px; color:#1F4E79; background:#EAF1FA; border-radius:10px; padding:2px 8px; margin:0 0 6px; }
+  .goal .gweek.done { color:#1E7A46; background:#E3F4EA; }
   .goal .seg button { padding:6px 10px; font-size:13px; }
   .goal .seg button.on.r0 { background:var(--ok); }
   .goal .seg button.on.r1 { background:#b7791f; }
@@ -159,7 +161,7 @@
  * Paste the web app URL (Apps Script ▸ Deploy ▸ Manage deployments ▸ Web app URL, ends with /exec).
  * When the page is opened from the Apps Script link itself, this is ignored.
  * ===================================================================== */
-const API_URL = 'https://script.google.com/macros/s/AKfycbxTsVbOEzt3rQsWVO0pfPHxjzhOUr2eva3jef4hnEQvevW3e5Ih4zUw0ZsEadlFEPnaBg/exec';
+const API_URL = 'PASTE_WEB_APP_EXEC_URL_HERE';
 
 /* When hosted outside Google there is no google.script.run – this small stand-in sends the same calls
    to the web app with fetch (no Google login involved, so multiple signed-in accounts do not matter). */
@@ -207,7 +209,7 @@ function busy(msg1, msg2, pct) {
   $('busy').classList.add('on');
 }
 const loadingHtml = t => `<span class="loading"><span class="spin"></span>${esc(t || '불러오는 중… Loading')}</span>`;
-const PAGE_VERSION = '2026-10-04';
+const PAGE_VERSION = '2026-10-05';
 const OLD_SERVER = '서버 코드(Code.gs)가 페이지보다 예전 버전입니다. Apps Script 편집기에서 Code.gs 내용을 새로 붙여넣고 저장한 뒤, 배포 관리 → 연필 → 새 버전으로 다시 배포하세요.';
 const call = (fn, ...args) => new Promise((res, rej) => {
   const r = google.script.run.withSuccessHandler(res).withFailureHandler(rej);
@@ -356,9 +358,16 @@ function goalsHtml(p, b, bl) {
   return `<div class="goals">` + list.map(g => `<div class="goal">
       <div class="gname">목표 Goal ${esc(g.num)} · ${esc(g.label)}</div>
       <div class="gtarget">위 문장대로 했으면 달성 · Met = did what the goal says</div>
+      ${weekLine(g)}
       <div class="seg">${R.map((r, i) => `<button type="button" class="r${i} ${bl.goals[g.num] === r ? 'on' : ''}" ${bl.locked ? 'disabled' : ''}
         data-goal="${esc(g.num)}" onclick="setGoal('${p.code}','${b.id}',this.dataset.goal,'${r}',this)">${RATING_KO[r] || r}</button>`).join('')}</div>
     </div>`).join('') + `</div>`;
+}
+
+function weekLine(g) {
+  const a = Number(g.weekAtt) || 0, t = Number(g.perWeek) || 0;
+  if (!t) return `<div class="gweek">이번 주 시도 ${a}회 · ${a} attempt${a === 1 ? '' : 's'} this week</div>`;
+  return `<div class="gweek ${a >= t ? 'done' : ''}">이번 주 시도 <b>${a} / ${t}</b>회 · ${a} attempt${a === 1 ? '' : 's'} / ${t} per week${a >= t ? ' ✓' : ''}</div>`;
 }
 
 function setGoal(code, bid, num, val, btn) {
