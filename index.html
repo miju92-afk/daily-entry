@@ -1,4 +1,4 @@
-<!-- WWF DHP Daily Entry – GitHub Pages copy of Entry.html. Only setting to change: API_URL (search "https://script.google.com/macros/s/AKfycbxEJJoiQBeohaulvyyOEAnki-ZLTCMccVXE6omKMnFKxzoGW6slZp_ojFu4a05s3UiOsw/exec"). No participant data is stored in this file. -->
+<!-- WWF DHP Daily Entry – GitHub Pages copy of Entry.html. Only setting to change: API_URL (search "https://script.google.com/macros/s/AKfycbxTsVbOEzt3rQsWVO0pfPHxjzhOUr2eva3jef4hnEQvevW3e5Ih4zUw0ZsEadlFEPnaBg/exec"). No participant data is stored in this file. -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -40,7 +40,8 @@
   .block .title { font-size:14px; font-weight:bold; }
   .block .meta { font-size:12px; color:var(--quiet); margin-bottom:6px; }
   .block .sel { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px; }
-  .block .sel select { flex:1 1 200px; }
+  .block .sel select { flex:1 1 200px; min-width:0; max-width:100%; }
+  select { max-width:100%; }
   .block.locked { opacity:.65; }
   .block.np textarea, .block.np .prompt, .block.np .goals { display:none; }
   /* goal check */
@@ -108,7 +109,7 @@
     <button id="navReview" type="button">검토·서명 Review</button>
   </nav>
   <span class="who" id="who"></span>
-  <span class="ver" style="color:#cfe0f5">v2026-10-03f</span>
+  <span class="ver" style="color:#cfe0f5">v2026-10-04</span>
   <button type="button" id="logout" style="display:none;border:1px solid rgba(255,255,255,.6);background:transparent;color:#fff;border-radius:16px;padding:4px 10px;font-size:12px;cursor:pointer">사용자 변경 Switch user</button>
 </header>
 <main>
@@ -158,7 +159,7 @@
  * Paste the web app URL (Apps Script ▸ Deploy ▸ Manage deployments ▸ Web app URL, ends with /exec).
  * When the page is opened from the Apps Script link itself, this is ignored.
  * ===================================================================== */
-const API_URL = 'https://script.google.com/macros/s/AKfycbxEJJoiQBeohaulvyyOEAnki-ZLTCMccVXE6omKMnFKxzoGW6slZp_ojFu4a05s3UiOsw/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxTsVbOEzt3rQsWVO0pfPHxjzhOUr2eva3jef4hnEQvevW3e5Ih4zUw0ZsEadlFEPnaBg/exec';
 
 /* When hosted outside Google there is no google.script.run – this small stand-in sends the same calls
    to the web app with fetch (no Google login involved, so multiple signed-in accounts do not matter). */
@@ -206,7 +207,7 @@ function busy(msg1, msg2, pct) {
   $('busy').classList.add('on');
 }
 const loadingHtml = t => `<span class="loading"><span class="spin"></span>${esc(t || '불러오는 중… Loading')}</span>`;
-const PAGE_VERSION = '2026-10-03f';
+const PAGE_VERSION = '2026-10-04';
 const OLD_SERVER = '서버 코드(Code.gs)가 페이지보다 예전 버전입니다. Apps Script 편집기에서 Code.gs 내용을 새로 붙여넣고 저장한 뒤, 배포 관리 → 연필 → 새 버전으로 다시 배포하세요.';
 const call = (fn, ...args) => new Promise((res, rej) => {
   const r = google.script.run.withSuccessHandler(res).withFailureHandler(rej);
@@ -354,7 +355,7 @@ function goalsHtml(p, b, bl) {
   const R = DAY.lists.ratings || ['Met', 'Partly met', 'Not met', 'No opportunity'];
   return `<div class="goals">` + list.map(g => `<div class="goal">
       <div class="gname">목표 Goal ${esc(g.num)} · ${esc(g.label)}</div>
-      ${g.target ? `<div class="gtarget">달성 기준: ${esc(g.target)}</div>` : ''}
+      <div class="gtarget">위 문장대로 했으면 달성 · Met = did what the goal says</div>
       <div class="seg">${R.map((r, i) => `<button type="button" class="r${i} ${bl.goals[g.num] === r ? 'on' : ''}" ${bl.locked ? 'disabled' : ''}
         data-goal="${esc(g.num)}" onclick="setGoal('${p.code}','${b.id}',this.dataset.goal,'${r}',this)">${RATING_KO[r] || r}</button>`).join('')}</div>
     </div>`).join('') + `</div>`;
@@ -689,7 +690,7 @@ function unsignMany(code) {
 }
 
 function showLogResults(title, links, problems, voided) {
-  $('results').style.display = '';
+  $('results').style.display = 'block';
   $('results').innerHTML = (links.length ? `<b>${title}</b><br>` + links.map(l => `${esc(l.name)} – ${l.units} units · <a href="${esc(l.pdf)}" target="_blank">PDF 열기</a>`).join('<br>') : '새로 만든 로그 없음') +
     (problems.length ? '<br><br><b>만들지 못한 이유</b><br>' + problems.map(esc).join('<br>') : '') +
     (voided ? `<br><br>이전 로그 ${voided}개는 그 사람 폴더의 _VOID 폴더로 옮겼습니다.` : '');
@@ -720,7 +721,7 @@ async function genLogs() {
     busy(false);
     showLogResults(`DDD 로그 ${links.length}개 완료`, links, problems, 0);
     const rr = await call('getReviewData', REV.date, PIN);
-    renderReview(rr); $('results').style.display = '';
+    renderReview(rr); $('results').style.display = 'block';
   } catch (err) { busy(false); alert('Error: ' + (err.message || err)); }
 }
 
@@ -733,7 +734,7 @@ async function regen(code) {
     busy(false);
     showLogResults('새 로그', r.links, r.problems, r.voided);
     const rr = await call('getReviewData', REV.date, PIN);
-    renderReview(rr); $('results').style.display = '';
+    renderReview(rr); $('results').style.display = 'block';
   } catch (err) { busy(false); alert('Error: ' + (err.message || err)); }
 }
 
