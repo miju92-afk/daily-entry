@@ -1,4 +1,4 @@
-<!-- WWF DHP Daily Entry – GitHub Pages copy of Entry.html. Only setting to change: API_URL (search "https://script.google.com/macros/s/AKfycbzmywro8VIXWD27SVDAE8c6U5sjms_de0JXJfma_VuBMxDGzuT8nYAnLWRpNVfspQTRdg/exec"). No participant data is stored in this file. -->
+<!-- WWF DHP Daily Entry – GitHub Pages copy of Entry.html. Only setting to change: API_URL (search "https://script.google.com/macros/s/AKfycbzeCEZd24OIwu4NZnI-kh0N06HXQH075CrgY3vesNzgRaFUnkpWfQqj9nz37L8Ewg4e8w/exec"). No participant data is stored in this file. -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -161,7 +161,7 @@
  * Paste the web app URL (Apps Script ▸ Deploy ▸ Manage deployments ▸ Web app URL, ends with /exec).
  * When the page is opened from the Apps Script link itself, this is ignored.
  * ===================================================================== */
-const API_URL = 'https://script.google.com/macros/s/AKfycbzmywro8VIXWD27SVDAE8c6U5sjms_de0JXJfma_VuBMxDGzuT8nYAnLWRpNVfspQTRdg/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzeCEZd24OIwu4NZnI-kh0N06HXQH075CrgY3vesNzgRaFUnkpWfQqj9nz37L8Ewg4e8w/exec';
 
 /* When hosted outside Google there is no google.script.run – this small stand-in sends the same calls
    to the web app with fetch (no Google login involved, so multiple signed-in accounts do not matter). */
@@ -209,7 +209,7 @@ function busy(msg1, msg2, pct) {
   $('busy').classList.add('on');
 }
 const loadingHtml = t => `<span class="loading"><span class="spin"></span>${esc(t || '불러오는 중… Loading')}</span>`;
-const PAGE_VERSION = '2026-10-05';
+const PAGE_VERSION = '2026-10-06';
 const OLD_SERVER = '서버 코드(Code.gs)가 페이지보다 예전 버전입니다. Apps Script 편집기에서 Code.gs 내용을 새로 붙여넣고 저장한 뒤, 배포 관리 → 연필 → 새 버전으로 다시 배포하세요.';
 const call = (fn, ...args) => new Promise((res, rej) => {
   const r = google.script.run.withSuccessHandler(res).withFailureHandler(rej);
