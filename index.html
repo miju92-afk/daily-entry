@@ -1,4 +1,4 @@
-<!-- WWF DHP Daily Entry – GitHub Pages copy of Entry.html. Only setting to change: API_URL (search "https://script.google.com/macros/s/AKfycbwAjtLxKF6wC-p4prK8LeyPA4Y08TG8ey0lSTFCFPGkDVK8ss7scpGsxuH2FsbfPYr8Qg/exec"). No participant data is stored in this file. -->
+<!-- WWF DHP Daily Entry – GitHub Pages copy of Entry.html. Only setting to change: API_URL (search "PASTE_WEB_APP_EXEC_URL_HERE"). No participant data is stored in this file. -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -46,6 +46,12 @@
   .block.np textarea, .block.np .prompt, .block.np .goals { display:none; }
   /* goal check */
   .goals { margin:4px 0 8px; }
+  .strat { background:#f4f8fc; border:1px solid #d6e2f0; border-radius:8px; padding:8px 10px; margin:8px 0; }
+  .strat .gname { font-size:13px; font-weight:bold; margin-bottom:4px; }
+  .strat label { display:flex; gap:8px; align-items:flex-start; padding:5px 0; font-size:14px; cursor:pointer; }
+  .strat label input { width:20px; height:20px; margin:1px 0 0; flex:none; }
+  .strat .en { display:block; font-size:11px; color:var(--quiet); }
+  .respite-tag { display:inline-block; background:#7a3e9d; color:#fff; border-radius:10px; padding:1px 8px; font-size:12px; margin-left:6px; }
   .goal { background:#f4f8fc; border:1px solid #d6e2f0; border-radius:8px; padding:8px 10px; margin-bottom:6px; }
   .goal .gname { font-size:13px; font-weight:bold; }
   .goal .gtarget { font-size:12px; color:var(--quiet); margin:2px 0 6px; }
@@ -111,7 +117,7 @@
     <button id="navReview" type="button">검토·서명 Review</button>
   </nav>
   <span class="who" id="who"></span>
-  <span class="ver" style="color:#cfe0f5">v2026-10-04</span>
+  <span class="ver" id="verLabel" style="color:#cfe0f5"></span>
   <button type="button" id="logout" style="display:none;border:1px solid rgba(255,255,255,.6);background:transparent;color:#fff;border-radius:16px;padding:4px 10px;font-size:12px;cursor:pointer">사용자 변경 Switch user</button>
 </header>
 <main>
@@ -161,7 +167,7 @@
  * Paste the web app URL (Apps Script ▸ Deploy ▸ Manage deployments ▸ Web app URL, ends with /exec).
  * When the page is opened from the Apps Script link itself, this is ignored.
  * ===================================================================== */
-const API_URL = 'https://script.google.com/macros/s/AKfycbwAjtLxKF6wC-p4prK8LeyPA4Y08TG8ey0lSTFCFPGkDVK8ss7scpGsxuH2FsbfPYr8Qg/exec';
+const API_URL = 'PASTE_WEB_APP_EXEC_URL_HERE';
 
 /* When hosted outside Google there is no google.script.run – this small stand-in sends the same calls
    to the web app with fetch (no Google login involved, so multiple signed-in accounts do not matter). */
@@ -209,7 +215,8 @@ function busy(msg1, msg2, pct) {
   $('busy').classList.add('on');
 }
 const loadingHtml = t => `<span class="loading"><span class="spin"></span>${esc(t || '불러오는 중… Loading')}</span>`;
-const PAGE_VERSION = '2026-10-06';
+const PAGE_VERSION = '2026-10-07';
+if (document.getElementById('verLabel')) document.getElementById('verLabel').textContent = 'v' + PAGE_VERSION;
 const OLD_SERVER = '서버 코드(Code.gs)가 페이지보다 예전 버전입니다. Apps Script 편집기에서 Code.gs 내용을 새로 붙여넣고 저장한 뒤, 배포 관리 → 연필 → 새 버전으로 다시 배포하세요.';
 const call = (fn, ...args) => new Promise((res, rej) => {
   const r = google.script.run.withSuccessHandler(res).withFailureHandler(rej);
@@ -280,8 +287,9 @@ function render(d) {
   $('logout').style.display = d.user.mode === 'pin' ? '' : 'none';
   $('nav').style.display = ['Signer', 'Admin'].includes(d.user.role) ? '' : 'none';
   const sch = d.people.filter(p => p.scheduled), oth = d.people.filter(p => !p.scheduled);
-  $('summary').textContent = `${d.label} · ${d.blocks.length} activity blocks · ${sch.length} participants scheduled` +
-    (d.blocks.length ? '' : ' — NO SCHEDULE for this date (check Weekly_Template)');
+  $('summary').innerHTML = esc(`${d.label} · ${d.blocks.length} activity blocks · ${sch.length} participants scheduled` +
+    (d.blocks.length ? '' : ' — NO SCHEDULE for this date (check Weekly_Template)')) +
+    (d.program === 'Respite' ? '<span class="respite-tag">토요일 Respite</span>' : '');
   d.people.forEach(p => {
     state[p.code] = {
       code: p.code,
@@ -289,6 +297,7 @@ function render(d) {
       arrival: p.attendance ? p.attendance.arrival : '',
       departure: p.attendance ? p.attendance.departure : '',
       note: p.attendance ? p.attendance.note : '',
+      strategies: (p.strategies || []).slice(),
       blocks: {},
     };
     d.blocks.forEach(b => {
@@ -343,11 +352,30 @@ function cardHtml(p) {
           <button type="button" class="link" onclick="fullDay('${p.code}')">정시 입력 (${DAY.blocks.length ? DAY.blocks[0].start + '–' + DAY.blocks[DAY.blocks.length - 1].end : ''})</button>
         </div>
         <div class="row" style="display:block"><input type="text" style="width:100%" data-c="${p.code}" data-f="note" value="${esc(s.note)}" placeholder="출석 메모 Attendance note (late arrival, left early…)"></div>
+        ${strategiesHtml(p)}
         <div class="msg" id="msg-${p.code}"></div>
         ${blocks}
       </div>
     </div>
   </div>`;
+}
+
+/** Respite (Saturday): the 5 "SERVICE STRATEGIES – check all that apply" boxes of the CBS / Respite log. */
+function strategiesHtml(p) {
+  if (DAY.program !== 'Respite' || !DAY.respite) return '';
+  const s = state[p.code];
+  const locked = DAY.blocks.length && DAY.blocks.every(b => s.blocks[b.id].locked);
+  return `<div class="strat"><div class="gname">오늘 도운 것 · Service Strategies (해당되는 것 모두 · check all that apply)</div>` +
+    DAY.respite.strategies.map((en, i) => `<label><input type="checkbox" ${s.strategies.includes(i + 1) ? 'checked' : ''} ${locked ? 'disabled' : ''}
+      onchange="setStrat('${p.code}', ${i + 1}, this.checked)"><span><b>${i + 1}. ${esc(DAY.respite.ko[i])}</b>
+      <span class="en">${esc(en)}</span></span></label>`).join('') + `</div>`;
+}
+function setStrat(code, n, on) {
+  const s = state[code];
+  s.strategies = s.strategies.filter(x => x !== n);
+  if (on) s.strategies.push(n);
+  s.strategies.sort();
+  markDirty(code);
 }
 
 /** The participant's goals for this activity (from the Goals tab) with Met / Partly / Not met / No opportunity buttons. */
@@ -425,6 +453,7 @@ function problems(code) {
   if (s.absent) return out;
   if (!s.arrival || !s.departure) out.card = '도착·퇴소 시간을 입력하세요 (arrival & departure required)';
   else if (toMin(s.departure) <= toMin(s.arrival)) out.card = '퇴소 시간이 도착보다 빠릅니다 (departure before arrival)';
+  else if (DAY.program === 'Respite' && !s.strategies.length && !DAY.blocks.every(b => s.blocks[b.id].locked)) out.card = '오늘 도운 것(Service Strategies)을 하나 이상 체크하세요 (check at least one box)';
   DAY.blocks.forEach(b => {
     const bl = s.blocks[b.id];
     if (bl.locked) return;
@@ -473,7 +502,9 @@ function save() {
     }
     const blocks = {};
     Object.entries(s.blocks).forEach(([b, bl]) => { if (!bl.locked) blocks[b] = { participation: bl.participation, prompt: bl.prompt, observation: bl.observation, goals: bl.goals }; });
-    entries.push({ code, absent: s.absent, arrival: s.arrival, departure: s.departure, note: s.note, blocks });
+    const e = { code, absent: s.absent, arrival: s.arrival, departure: s.departure, note: s.note, blocks };
+    if (DAY.program === 'Respite') e.strategies = s.strategies;
+    entries.push(e);
   });
   if (!entries.length) { $('status').textContent = bad ? `${bad}명 미완성 – 빨간 칸을 확인하세요` : ''; return; }
   $('save').disabled = true; $('status').textContent = 'Saving…';
