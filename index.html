@@ -1,4 +1,4 @@
-<!-- WWF DHP Daily Entry – GitHub Pages copy of Entry.html. Only setting to change: API_URL (search "https://script.google.com/macros/s/AKfycbzeCEZd24OIwu4NZnI-kh0N06HXQH075CrgY3vesNzgRaFUnkpWfQqj9nz37L8Ewg4e8w/exec"). No participant data is stored in this file. -->
+<!-- WWF DHP Daily Entry – GitHub Pages copy of Entry.html. Only setting to change: API_URL (search "https://script.google.com/macros/s/AKfycbxZ_4H8YV4F9l8hKi7mvKPwHcJrvf1kfvt64Dm5ePOW9jB1vzYqXeZ2Pl9sZqVbJWK21g/exec"). No participant data is stored in this file. -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -161,7 +161,7 @@
  * Paste the web app URL (Apps Script ▸ Deploy ▸ Manage deployments ▸ Web app URL, ends with /exec).
  * When the page is opened from the Apps Script link itself, this is ignored.
  * ===================================================================== */
-const API_URL = 'https://script.google.com/macros/s/AKfycbzeCEZd24OIwu4NZnI-kh0N06HXQH075CrgY3vesNzgRaFUnkpWfQqj9nz37L8Ewg4e8w/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxZ_4H8YV4F9l8hKi7mvKPwHcJrvf1kfvt64Dm5ePOW9jB1vzYqXeZ2Pl9sZqVbJWK21g/exec';
 
 /* When hosted outside Google there is no google.script.run – this small stand-in sends the same calls
    to the web app with fetch (no Google login involved, so multiple signed-in accounts do not matter). */
@@ -231,7 +231,7 @@ const KO = {
   'Independent': '혼자서 (도움 없음)', 'Gestural prompt': '손짓·몸짓 도움', 'Verbal prompt': '말로 도움',
   'Verbal + physical prompt': '말 + 신체 도움', 'Full physical assistance (hand-over-hand)': '전적인 신체 도움 (손 잡고)',
 };
-const RATING_KO = { 'Met': '달성', 'Partly met': '일부', 'Not met': '미달성', 'No opportunity': '기회 없음' };
+const RATING_KO = { 'Met': '달성', 'Partly met': '일부', 'Not met': '미달성', 'No opportunity': '기회 없었음' };
 const choiceLabel = (x, i) => `${i + 1}. ${x}${KO[x] ? ' – ' + KO[x] : ''}`;
 
 const store = {
@@ -433,7 +433,7 @@ function problems(code) {
     else if (!bl.prompt && bl.participation !== 'Declined') out.blocks[b.id] = '도움 수준을 고르세요 (choose prompt level)';
     else if (bl.participation !== 'Declined') {
       const p = DAY.people.find(x => x.code === code), gl = ((p && p.goals) || {})[b.id] || [];
-      if (gl.some(g => !bl.goals[g.num])) out.blocks[b.id] = '목표 달성 여부를 고르세요 (rate each goal – or 기회 없음)';
+      if (gl.some(g => !bl.goals[g.num])) out.blocks[b.id] = '목표 달성 여부를 고르세요 (rate each goal – or 기회 없었음)';
     }
   });
   return out;
