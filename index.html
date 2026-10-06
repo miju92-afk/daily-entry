@@ -351,7 +351,7 @@ function cardHtml(p) {
         <div class="row">
           <label class="small">도착 Arrival <input type="time" data-c="${p.code}" data-f="arrival" value="${esc(s.arrival)}"></label>
           <label class="small">퇴소 Departure <input type="time" data-c="${p.code}" data-f="departure" value="${esc(s.departure)}"></label>
-          <button type="button" class="link" onclick="fullDay('${p.code}')">정시 입력 (${DAY.blocks.length ? DAY.blocks[0].start + '–' + DAY.blocks[DAY.blocks.length - 1].end : ''})</button>
+          <button type="button" class="link" onclick="fullDay('${p.code}')">정시 입력 (${stdTimes(p) ? stdTimes(p).start + '–' + stdTimes(p).end : ''})</button>
         </div>
         <div class="row" style="display:block"><input type="text" style="width:100%" data-c="${p.code}" data-f="note" value="${esc(s.note)}" placeholder="출석 메모 Attendance note (late arrival, left early…)"></div>
         ${strategiesHtml(p)}
@@ -418,10 +418,16 @@ function setAbsent(code, absent) {
   markDirty(code);
 }
 
+/** Standard times for this person: their own (Participants ▸ Default Arrival/Departure) or the day's first–last block. */
+function stdTimes(p) {
+  if (!DAY.blocks.length) return null;
+  return { start: (p && p.defStart) || DAY.blocks[0].start, end: (p && p.defEnd) || DAY.blocks[DAY.blocks.length - 1].end };
+}
 function fullDay(code) {
-  if (!DAY.blocks.length) return;
-  set(code, null, 'arrival', DAY.blocks[0].start);
-  set(code, null, 'departure', DAY.blocks[DAY.blocks.length - 1].end);
+  const t = stdTimes(DAY.people.find(x => x.code === code));
+  if (!t) return;
+  set(code, null, 'arrival', t.start);
+  set(code, null, 'departure', t.end);
   document.querySelector(`input[data-c="${code}"][data-f="arrival"]`).value = state[code].arrival;
   document.querySelector(`input[data-c="${code}"][data-f="departure"]`).value = state[code].departure;
 }
